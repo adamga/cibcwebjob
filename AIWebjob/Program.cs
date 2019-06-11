@@ -31,6 +31,10 @@ namespace AIWebjob
                 tracknetresult(t.site, System.Convert.ToInt32(t.port), client);
 
             }
+            System.Diagnostics.Trace.Write("Complete!");
+            client.Flush();
+            // Allow some time for flushing before shutdown.
+            System.Threading.Thread.Sleep(5000);
         }
         static void tracknetresult(string fqdnaddress, int port, TelemetryClient telemetryClient)
         {
@@ -51,7 +55,7 @@ namespace AIWebjob
             var timer = System.Diagnostics.Stopwatch.StartNew();
             try
             {
-                success = false;
+                success = true;
                 //Uses a remote endpoint to establish a socket connection.
                 TcpClient tcpClient = new TcpClient();
                 IPAddress ipAddress = Dns.GetHostEntry(fqdnaddress).AddressList[0];
@@ -71,10 +75,7 @@ namespace AIWebjob
                 timer.Stop();
                 telemetryClient.TrackDependency("NetConnectionTest ", fqdnaddress, " port=" + port, startTime, timer.Elapsed, success);
 
-                System.Diagnostics.Trace.Write("Complete!");
-                telemetryClient.Flush();
-                // Allow some time for flushing before shutdown.
-                System.Threading.Thread.Sleep(5000);
+
             }
         }
 
