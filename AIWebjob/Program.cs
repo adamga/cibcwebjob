@@ -8,37 +8,43 @@ using System.Threading.Tasks;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Extensibility;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 
 namespace AIWebjob
 {
     class Program
     {
+        public TelemetryClient client;
         static void Main(string[] args)
         {
-//using literal example. You should probably change this to pull from a config file or something
+            //using literal example. You should probably change this to pull from a config file or something
+            //TelemetryClient telemetryClient = new TelemetryClient();
+            var reader = new System.Configuration.AppSettingsReader();
+            string key = reader.GetValue("appinsightskey", typeof(string)).ToString();
+            TelemetryConfiguration.Active.InstrumentationKey = key;
 
-            Functions func = new Functions();
-            func.tracknetresult("www.msn.com", 80);
+            TelemetryClient client = new TelemetryClient();
+            List<target> targets = JsonConvert.DeserializeObject<List<target>>(System.IO.File.ReadAllText(@"targets.json"));
+
+            foreach (target t in targets)
+            {
+                tracknetresult(t.site, System.Convert.ToInt32(t.port), client);
+
+            }
         }
-    }
-
-    public class Functions
-    {
-       
-
-        public void tracknetresult(string fqdnaddress, int port)
+        static void tracknetresult(string fqdnaddress, int port, TelemetryClient telemetryClient)
         {
-            TelemetryClient telemetryClient = new TelemetryClient();
-
-            if (fqdnaddress.Length<1)
+            
+            
+            if (fqdnaddress.Length < 1)
                 fqdnaddress = "www.msn.com";
             if (port == 0)
                 port = 80;
-            //You should probably take out this literal instrumentation key and pull it from a config file or something
-            TelemetryConfiguration.Active.InstrumentationKey = "instrumentationkeyhere";
 
+
+     
             // You can probably remove this trace statment, simply for debugging
-            telemetryClient.TrackTrace("Hello From our sample!");
+ //           teleTrackTrace("Hello From our sample!");
 
             var success = false;
             var startTime = DateTime.UtcNow;
@@ -63,8 +69,8 @@ namespace AIWebjob
             finally
             {
                 timer.Stop();
-                telemetryClient.TrackDependency("NetConnectionTest ", " target=" + fqdnaddress, " port=" + port, startTime, timer.Elapsed, success);
-                
+                telemetryClient.TrackDependency("NetConnectionTest ", fqdnaddress, " port=" + port, startTime, timer.Elapsed, success);
+
                 System.Diagnostics.Trace.Write("Complete!");
                 telemetryClient.Flush();
                 // Allow some time for flushing before shutdown.
@@ -72,6 +78,13 @@ namespace AIWebjob
             }
         }
 
+    }
+    public class target
+    {
+
+        public string site { get; set; }
+        public string port { get; set; }
 
     }
+
 }
