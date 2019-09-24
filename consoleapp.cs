@@ -19,7 +19,7 @@ namespace ConsoleApp2
             TelemetryClient _client = null;
             //get your instrumentation key for app insights here
             //or use hard-coded one
-            string key = "575c6048-f89f-4c66-8667-d23a4c7153c5";
+            string key = "575c6048-f89f-XXX-XXXX-d23a4c7153c5";
 
             if (string.IsNullOrWhiteSpace(key))
             {
